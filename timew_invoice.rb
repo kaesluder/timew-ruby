@@ -3,17 +3,27 @@
 require 'json'
 require 'time'
 require 'date'
+require 'open3'
 
 def localize_time(time_string)
   time_format = "%Y-%m-%d %H:%M"
-  return DateTime.parse(time_string).new_offset(DateTime.now.offset).strftime(time_format)
+  if time_string
+    DateTime.parse(time_string).new_offset(DateTime.now.offset).strftime(time_format)
+  else
+    ""
+  end
 end
 
 def localize_diference(start_time, end_time)
   
+  if (!start_time || !end_time)
+    return ''
+  end
+
   endt = DateTime.parse(end_time)
   startt = DateTime.parse(start_time)
   diff = ( endt - startt ) * 24
+
 
   return format('%.2f', diff)
 end
@@ -36,10 +46,24 @@ end
 
 # timew export 2025-03-01 - 2025-03-30
 
-start_date = '2025-03-01' 
-end_date = '2025-03-30' 
+start_date = ARGV[0] 
+end_date = ARGV[1]
 
-json_string = `timew export #{start_date} - #{end_date}`
+if (!start_date || !end_date)
+  abort "Error: missing start or end date"
+end
+
+cmd = "timew export #{start_date} - #{end_date}"
+
+stdout, stderr, status = Open3.capture3(cmd)
+
+if status.success?
+  json_string = stdout
+  # Process json_string
+else
+  abort "Error running timew: #{stderr}"
+end
+
 time_data = JSON.parse(json_string)
 
 
@@ -50,7 +74,7 @@ html = <<~HTML
   <head>
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>JSON to HTML</title>
+      <title>Time Report: #{start_date} &ndash; #{end_date}</title>
       <style>
           table, th, td {
             border: 1px solid black;
@@ -60,7 +84,7 @@ html = <<~HTML
       </style>
   </head>
   <body>
-      <h1>Data</h1>
+      <h1>Time Report: #{start_date} &ndash; #{end_date}</h1>
 
 
       <table>
