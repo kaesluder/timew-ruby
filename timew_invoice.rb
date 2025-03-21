@@ -59,7 +59,6 @@ stdout, stderr, status = Open3.capture3(cmd)
 
 if status.success?
   json_string = stdout
-  # Process json_string
 else
   abort "Error running timew: #{stderr}"
 end
@@ -100,15 +99,18 @@ time_data.each do |row|
   html << format_row(row)
 end 
 
-html << <<~HTML
-  </table>
-  </body>
-  </html>
-HTML
+def gen_footer()
+  <<~HTML
+    </table>
+    </body>
+    </html>
+  HTML
+end
+
+html << gen_footer
 
 puts html
 
-puts localize_time("20250319T160000Z")
 
 
 
